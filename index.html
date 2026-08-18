@@ -1,8 +1,9 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Northline Studio</title>
 
@@ -47,6 +48,7 @@
     .auth-status {
       margin-top: 18px;
       font-size: 14px;
+      line-height: 1.5;
       color: #56616a;
     }
 
@@ -67,15 +69,29 @@
       padding: 9px 14px;
       border-radius: 8px;
       cursor: pointer;
+      font-size: 14px;
+    }
+
+    @media (max-width: 700px) {
+      .user-email {
+        display: none;
+      }
+
+      .auth-box {
+        margin: 50px 16px;
+        padding: 24px;
+      }
     }
   </style>
 </head>
+
 
 <body>
 
 <div class="wrap">
 
   <!-- NAVIGATION -->
+
   <nav>
 
     <a class="logo" href="index.html">
@@ -90,12 +106,18 @@
 
     <div class="user-area" id="userArea">
       <span class="user-email" id="userEmail"></span>
-      <button class="logout-btn" id="logoutBtn">
+
+      <button
+        class="logout-btn"
+        id="logoutBtn"
+        type="button">
         Log out
       </button>
     </div>
 
-    <a class="btn" href="#auth">
+    <a
+      class="btn"
+      href="#auth">
       Sign in
     </a>
 
@@ -103,6 +125,7 @@
 
 
   <!-- HERO -->
+
   <main>
 
     <section class="hero">
@@ -114,21 +137,27 @@
         </div>
 
         <h1>
-          Simple websites. Strong first impressions.
+          Simple websites.
+          Strong first impressions.
         </h1>
 
         <p class="lead">
-          We design focused, responsive websites for small businesses
-          and growing brands — without the unnecessary complexity.
+          We design focused, responsive websites for small
+          businesses and growing brands — without the
+          unnecessary complexity.
         </p>
 
         <div class="actions">
 
-          <a class="btn" href="services.html#contact">
+          <a
+            class="btn"
+            href="services.html#contact">
             Let’s work together
           </a>
 
-          <a class="btn secondary" href="services.html#about">
+          <a
+            class="btn secondary"
+            href="services.html#about">
             Explore services
           </a>
 
@@ -137,13 +166,12 @@
       </div>
 
 
-      <!-- VISUAL -->
-
       <div class="visual">
 
         <div class="card one">
 
           <div class="mini"></div>
+
           <div class="mini short"></div>
 
           <span class="badge">
@@ -155,6 +183,7 @@
         <div class="card two">
 
           <div class="mini"></div>
+
           <div class="mini short"></div>
 
         </div>
@@ -174,8 +203,7 @@
 
           <div
             class="eyebrow"
-            style="color:#9ea8af"
-          >
+            style="color:#9ea8af">
             Ready when you are
           </div>
 
@@ -192,8 +220,7 @@
 
         <a
           class="btn"
-          href="services.html#contact"
-        >
+          href="services.html#contact">
           Get in touch
         </a>
 
@@ -241,16 +268,14 @@
           <button
             class="btn"
             id="signInBtn"
-            type="button"
-          >
+            type="button">
             Sign in
           </button>
 
           <button
             class="btn secondary"
             id="signUpBtn"
-            type="button"
-          >
+            type="button">
             Create account
           </button>
 
@@ -259,8 +284,8 @@
 
         <div
           class="auth-status"
-          id="authStatus"
-        ></div>
+          id="authStatus">
+        </div>
 
       </div>
 
@@ -295,6 +320,13 @@
   const SUPABASE_URL =
     "https://lxnkeapimdfzttiolrls.supabase.co";
 
+
+  /*
+    IMPORTANT:
+    Replace the text below with your own
+    sb_publishable_... key.
+  */
+
   const SUPABASE_PUBLISHABLE_KEY =
     "sb_publishable_gqy3JOVtbFcZF2Euv8_ZVA_QgwSYwvV";
 
@@ -304,6 +336,10 @@
       SUPABASE_URL,
       SUPABASE_PUBLISHABLE_KEY
     );
+
+
+  const SITE_URL =
+    "https://sasha123469.github.io/northline-demo/";
 
 
   const emailInput =
@@ -337,6 +373,82 @@
 
   }
 
+
+  /*
+    Check whether Supabase returned
+    an authentication error in the URL.
+  */
+
+  function checkAuthError() {
+
+    const hash =
+      window.location.hash;
+
+
+    if (!hash) {
+      return;
+    }
+
+
+    const params =
+      new URLSearchParams(
+        hash.substring(1)
+      );
+
+
+    const errorCode =
+      params.get("error_code");
+
+    const errorDescription =
+      params.get("error_description");
+
+
+    if (!errorCode) {
+      return;
+    }
+
+
+    if (errorCode === "otp_expired") {
+
+      showStatus(
+        "This confirmation link has expired or has already been used. Please create a new confirmation email."
+      );
+
+    } else {
+
+      showStatus(
+        errorDescription
+          ? decodeURIComponent(errorDescription.replace(/\+/g, " "))
+          : "Authentication error. Please try again."
+      );
+
+    }
+
+
+    /*
+      Remove the error from the address bar
+      after reading it.
+    */
+
+    window.history.replaceState(
+      {},
+      document.title,
+      SITE_URL
+    );
+
+
+    document
+      .getElementById("auth")
+      .scrollIntoView({
+        behavior: "smooth"
+      });
+
+  }
+
+
+  /*
+    Create account
+  */
 
   async function signUp() {
 
@@ -372,10 +484,20 @@
     );
 
 
-    const { error } =
+    const { data, error } =
       await supabaseClient.auth.signUp({
+
         email: email,
-        password: password
+
+        password: password,
+
+        options: {
+
+          emailRedirectTo:
+            SITE_URL
+
+        }
+
       });
 
 
@@ -389,12 +511,39 @@
     }
 
 
+    /*
+      If Supabase requires email confirmation,
+      there will be no active session yet.
+    */
+
+    if (
+      data.user &&
+      !data.session
+    ) {
+
+      showStatus(
+        "Your account was created. Please check your email and click the confirmation link."
+      );
+
+      return;
+    }
+
+
     showStatus(
-      "Account created. Please check your email to confirm your account."
+      "Your account has been created successfully."
+    );
+
+
+    updateUser(
+      data.user
     );
 
   }
 
+
+  /*
+    Sign in
+  */
 
   async function signIn() {
 
@@ -422,8 +571,11 @@
 
     const { data, error } =
       await supabaseClient.auth.signInWithPassword({
+
         email: email,
+
         password: password
+
       });
 
 
@@ -438,21 +590,40 @@
 
 
     showStatus(
-      "Successfully signed in."
+      "You are successfully signed in."
     );
 
 
-    updateUser(data.user);
+    updateUser(
+      data.user
+    );
 
   }
 
 
+  /*
+    Log out
+  */
+
   async function signOut() {
 
-    await supabaseClient.auth.signOut();
+    const { error } =
+      await supabaseClient.auth.signOut();
+
+
+    if (error) {
+
+      showStatus(
+        error.message
+      );
+
+      return;
+    }
+
 
     userArea.style.display =
       "none";
+
 
     showStatus(
       "You have been signed out."
@@ -460,6 +631,10 @@
 
   }
 
+
+  /*
+    Show current user
+  */
 
   function updateUser(user) {
 
@@ -475,11 +650,16 @@
     userArea.style.display =
       "flex";
 
+
     userEmail.textContent =
       user.email;
 
   }
 
+
+  /*
+    Button events
+  */
 
   signUpBtn.addEventListener(
     "click",
@@ -499,25 +679,46 @@
   );
 
 
-  supabaseClient.auth.getSession()
+  /*
+    Check existing session
+  */
+
+  supabaseClient.auth
+    .getSession()
     .then(({ data }) => {
 
       updateUser(
-        data.session?.user
+        data.session
+          ? data.session.user
+          : null
       );
 
     });
 
 
-  supabaseClient.auth.onAuthStateChange(
-    (event, session) => {
+  /*
+    Listen for login/logout/confirmation
+  */
 
-      updateUser(
-        session?.user
-      );
+  supabaseClient.auth
+    .onAuthStateChange(
+      (event, session) => {
 
-    }
-  );
+        updateUser(
+          session
+            ? session.user
+            : null
+        );
+
+      }
+    );
+
+
+  /*
+    Check for expired confirmation links
+  */
+
+  checkAuthError();
 
 </script>
 
